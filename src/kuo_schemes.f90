@@ -9,7 +9,8 @@ program kuo_schemes
                        &  dtdt, dqdt, qwb, twb, rh, alpha_env, Cps_env, tve
  real ::  bkuo, Cps, cvgh, cvgu, dt, dummy, dz, gz2, p2, ps, qc, qv1, qv2, qw, rain, &
         & rhmean, t1, t2, ts, zlat, zlon, zlsm, tvc, zcape, zcv1, zcv2, zint, zint2, &
-        & zint_t, zint_q, zlam, zmean, s1, tw, qsat, dqsat, alpha_w, Lh, w_lcl 
+        & zint_t, zint_q, zlam, zmean, s1, tw, qsat, dqsat, alpha_w, Lh, w_lcl,  &
+        & t_excess, q_excess 
  integer :: kdummy, i, irec, k                      
  real, dimension(nlev+1) :: ph, gzh
  integer, dimension(nlev) :: icond
@@ -38,6 +39,11 @@ program kuo_schemes
 ! 
  zcv1 = 86400.0
  zcv2 = zcv1*1.0E3
+!
+! Possibility of modifying (T,q) properties of the parcel (from surface fluxes)
+! 
+ t_excess = 0.0
+ q_excess = 0.0
 !
 ! Read atmospheric profiles
 !  
@@ -76,8 +82,8 @@ program kuo_schemes
 !
 ! Define moist pseudo adiabat (condensed water is removed after being created) 
 !
- t1 = t(nlev) 
- qv1 = qv(nlev)
+ t1 = t(nlev) + t_excess
+ qv1 = qv(nlev) + q_excess
  t2 = t1
  qv2 = qv1 
  qc = 0.0
