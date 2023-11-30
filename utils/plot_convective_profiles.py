@@ -1,7 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-expid = '002'
+expid = '004'
+profile_number = '900'
 
 p1,dtdt1,dqdt1=np.loadtxt('../data_out/conv_tendencies_kuo65_'+expid+'.dat',unpack=True)
 p2,dtdt2,dqdt2=np.loadtxt('../data_out/conv_tendencies_kuogeleyn_'+expid+'.dat',unpack=True)
@@ -18,7 +19,7 @@ ax1.plot(dtdt1,p1/100.0,label='Kuo65')
 ax1.plot(dtdt2,p1/100.0,label='Kuo-Geleyn')
 ax1.plot(dtdt3,p1/100.0,label='Kuo symmetric')
 ax1.plot(dtdt4,p1/100.0,label='Kuo Anthes')
-ax1.set_title('Heating rate '+expid,fontsize='small',loc='left')
+ax1.set_title('Heating rate Exp n°'+expid+' --- Profile n°'+profile_number,fontsize='small',loc='left')
 ax1.set_xlabel('K/day',fontsize='small')
 ax1.set_ylabel('Pressure (hPa)')
 ax1.legend(loc='best',fontsize='small')
@@ -30,7 +31,7 @@ ax2.plot(dqdt1,p1/100.0,label='Kuo65')
 ax2.plot(dqdt2,p1/100.0,label='Kuo-Geleyn')
 ax2.plot(dqdt3,p1/100.0,label='Kuo symmetric')
 ax2.plot(dqdt4,p1/100.0,label='Kuo Anthes')
-ax2.set_title('Moistening rate '+expid,fontsize='small',loc='left')
+ax2.set_title('Moistening rate n°'+expid,fontsize='small',loc='left')
 ax2.set_xlabel('(g/kg)/day',fontsize='small')
 ax2.legend(loc='best',fontsize='small')
 #
@@ -42,7 +43,7 @@ ax3.set_xlim(240.,305.)
 ax3.plot(t*(1+0.608*qv),p,label='Tv')
 ax3.plot(tw,p,label='Tw')
 ax3.plot(tc*(1+0.608*qc),p,label='Tvc')
-ax3.set_title('temperature',fontsize='small',loc='left')
+ax3.set_title('Temperature',fontsize='small',loc='left')
 ax3.set_xlabel('K',fontsize='small')
 ax3.set_ylabel('Pressure (hPa)')
 ax3.legend(loc='best',fontsize='small')
@@ -52,7 +53,7 @@ ax4.set_ylim(1000,100)
 ax4.plot(qv*1000,p,label='Q')
 ax4.plot(qw*1000,p,label='Qw')
 ax4.plot(qc*1000,p,label='Qc')
-ax4.set_title('humidity',fontsize='small',loc='left')
+ax4.set_title('Humidity',fontsize='small',loc='left')
 ax4.set_xlabel('g/kg',fontsize='small')
 ax4.legend(loc='best',fontsize='small')
 figure = plt.gcf()

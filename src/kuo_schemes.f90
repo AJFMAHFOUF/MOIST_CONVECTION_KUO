@@ -6,17 +6,17 @@ program kuo_schemes
 ! Values above are consistent with Marquet and Malardel + ECMWF constants 
 ! Other constants proposed by Emanuel (1994) : Cpv=1870 - Cl=4190 
  real, dimension(nlev) :: p, t, qv, gz, w, u, v, tc, qvc, ptent, ptenq, &
-                       &  dtdt, dqdt, qwb, twb, rh, alpha_env, Cps_env
+                       &  dtdt, dqdt, qwb, twb, rh, alpha_env, Cps_env, tve
  real ::  bkuo, Cps, cvgh, cvgu, dt, dummy, dz, gz2, p2, ps, qc, qv1, qv2, qw, rain, &
-        & rhmean, t1, t2, ts, zlat, zlon, zlsm, tv, tvc, tve, zcape, zcv1, zcv2, zint, zint2, &
-        & zint_t, zint_q, zlam, zmean, s1, tw, qsat, dqsat, alpha_w, Lh 
+        & rhmean, t1, t2, ts, zlat, zlon, zlsm, tvc, zcape, zcv1, zcv2, zint, zint2, &
+        & zint_t, zint_q, zlam, zmean, s1, tw, qsat, dqsat, alpha_w, Lh, w_lcl 
  integer :: kdummy, i, irec, k                      
  real, dimension(nlev+1) :: ph, gzh
  integer, dimension(nlev) :: icond
  logical :: lsub
  character*3 :: expid
  
- expid='001'
+ expid='004'
 !
  open (unit=20,file='../data_in/profiles.dat',status='old')
  open (unit=21,file='../data_in/input_model_mean_values.dat',status='old')
@@ -48,9 +48,8 @@ program kuo_schemes
    do k=1,nlev
      read(20,*) t(k),qv(k),p(k),ph(k),w(k),u(k),v(k)
      rh(k) = qv(k)/qsat(p(k),t(k))
-     Cps = Cp*(1.0 - qv(k)) + qv(k)*Cpv
-     Cps_env(k) = Cps 
-     alpha_env(k) = Lh(t(k),lsub)/Cps
+     Cps_env(k) = Cp*(1.0 - qv(k)) + qv(k)*Cpv
+     alpha_env(k) = Lh(t(k),lsub)/Cps_env(k)
    enddo
    ph(nlev+1) = ps  
  enddo 
@@ -70,8 +69,8 @@ program kuo_schemes
 !
  gzh(nlev+1) = 0.0
  do k=nlev,1,-1
-   tv = t(k)*(1. + 0.608*qv(k))
-   gzh(k) = gzh(k+1) + Rd*tv*(ph(k+1)- ph(k))/p(k)
+   tve(k) = t(k)*(1. + 0.608*qv(k))
+   gzh(k) = gzh(k+1) + Rd*tve(k)*(ph(k+1)- ph(k))/p(k)
    gz(k) = 0.5*(gzh(k+1) + gzh(k))
  enddo 
 !
@@ -82,7 +81,7 @@ program kuo_schemes
  t2 = t1
  qv2 = qv1 
  qc = 0.0
- icond(nlev) = 0
+ icond(:) = 0
  Cps = Cp*(1.0 - qv1) + qv1*Cpv
  s1 = Cps*t1 + gz(nlev) + Lh(t1,lsub)*qv1
 !
@@ -115,6 +114,7 @@ program kuo_schemes
    qwb(k) = qw
    twb(k) = tw
    if (qv2 > qsat(p2,t2) .and. qv2 > 1.E-9) then
+     if (icond(k) == 0 .and. icond(k+1) == 0) w_lcl = w(k)
      icond(k) = 1
      qc  = qv2 - qsat(p2,t2)
      qv1 = qsat(p2,t2)
@@ -126,12 +126,12 @@ program kuo_schemes
    endif 
 !
 !  Estimate regions with positive buoyancy from virtual temperature
+!  Activate convection only when the vertical velocity is positive at LCL
 !    
    tvc = t2*(1.0 + 0.608*qv1 - qc) ! inclusion of water loading in virtual temperature
-   tve = t(k)*(1.0 + 0.608*qv(k))
-   if (tvc > tve .and. icond(k) == 1) then
-     icond(k) = 2
-     zcape = zcape - rg*dz*(tvc - tve)/tve
+   if (tvc > tve(k) .and. icond(k) == 1) then
+     if (w_lcl > 0.0) icond(k) = 2  
+     zcape = zcape - rg*dz*(tvc - tve(k))/tve(k)
    endif 
 !
 ! Compute new moist static energy at level (k+1) for level (k)
@@ -167,7 +167,12 @@ program kuo_schemes
       zmean =  zmean + (ph(k+1) - ph(k))/rg
    endif
  enddo
- rhmean = rhmean/zmean
+ if (zmean > 0.0) then
+   rhmean = rhmean/zmean
+ else
+   rhmean = 0.0
+   print *,"Warning : no convective layer has been found ! RH mean set to zero"
+ endif    
 !
 ! Empirical moistening parameter for Kuo-Anthes scheme
 ! 

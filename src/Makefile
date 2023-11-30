@@ -1,4 +1,4 @@
-SOURCE	= kuo_schemes.f90 thermo_functions2.f90
+SOURCE	= kuo_schemes.f90 thermo_functions3.f90
 
 FC = gfortran
 #FFLAGS = -fdefault-real-8 -O3 
